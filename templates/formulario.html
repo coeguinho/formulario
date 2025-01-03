@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PRÉ-CADASTRO MUNDONET</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .form-container {
+            background: #fff;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+        .form-container h1 {
+            font-size: 1.8em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .form-container label {
+            display: block;
+            text-align: left;
+            font-weight: bold;
+            margin: 10px 0 5px;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-container input.filled {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .form-container button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Estilo para o pop-up de sucesso */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #28a745;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            text-align: center;
+            width: 80%;
+            max-width: 400px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>PRÉ-CADASTRO MUNDONET</h1>
+        <form action="/enviar" method="POST" id="formulario">
+            <label for="nome">Nome Completo:</label>
+            <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
+
+            <label for="endereco">Endereço Completo:</label>
+            <input type="text" id="endereco" name="endereco" placeholder="Digite seu endereço completo" required>
+
+            <label for="cep">CEP:</label>
+            <input type="text" id="cep" name="cep" placeholder="Digite seu CEP" required>
+
+            <label for="numero">Número:</label>
+            <input type="text" id="numero" name="numero" placeholder="Digite o número da residência" required>
+
+            <label for="bairro">Bairro:</label>
+            <input type="text" id="bairro" name="bairro" placeholder="Digite seu bairro" required>
+
+            <label for="complemento">Complemento:</label>
+            <input type="text" id="complemento" name="complemento" placeholder="Digite o complemento (se houver)">
+
+            <label for="fone_celular">Telefone Celular:</label>
+            <input type="text" id="fone_celular" name="fone_celular" placeholder="Digite seu telefone celular" required>
+
+            <label for="cnpj_cpf">CPF ou CNPJ:</label>
+            <input type="text" id="cnpj_cpf" name="cnpj_cpf" placeholder="Digite seu CPF ou CNPJ" required>
+
+            <label for="data_nascimento">Data de Nascimento:</label>
+            <input type="date" id="data_nascimento" name="data_nascimento" required>
+
+            <input type="hidden" name="data_cadastro" value="{{ data_atual }}">
+            <input type="hidden" name="referencia" id="referencia">
+
+            <button type="submit">Enviar</button>
+        </form>
+    </div>
+
+    <!-- Pop-up de sucesso -->
+    <div class="popup" id="popup">
+        Cadastro efetuado com sucesso! Em breve nossa equipe entrará em contato com você, obrigado.
+    </div>
+
+    <script>
+        // Função para verificar e adicionar a classe 'filled' ao campo preenchido
+        function checkInputFilled() {
+            const inputs = document.querySelectorAll('input');
+            inputs.forEach(input => {
+                if (input.value !== '') {
+                    input.classList.add('filled');
+                } else {
+                    input.classList.remove('filled');
+                }
+            });
+        }
+
+        // Adiciona o evento para verificar quando o usuário preencher o campo
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', checkInputFilled);
+        });
+
+        document.getElementById('formulario').addEventListener('submit', function(event) {
+            // Transformar nome completo para caixa alta
+            var nomeInput = document.getElementById('nome');
+            nomeInput.value = nomeInput.value.toUpperCase(); // Nome completo em maiúsculas
+
+            // Verificar se a data de nascimento foi preenchida e formatar no formato dd/mm/aaaa
+            if (document.getElementById('data_nascimento').value) {
+                var dataNascimento = document.getElementById('data_nascimento').value;
+                var data = new Date(dataNascimento);
+                var dia = ("0" + data.getDate()).slice(-2);
+                var mes = ("0" + (data.getMonth() + 1)).slice(-2);
+                var ano = data.getFullYear();
+                document.getElementById('referencia').value = dia + '/' + mes + '/' + ano;
+            }
+        });
+
+        // Exibir pop-up após o envio do formulário
+        document.getElementById('formulario').onsubmit = function(event) {
+            event.preventDefault(); // Previne o envio do formulário
+
+            // Exibe o pop-up
+            document.getElementById('popup').style.display = 'block';
+
+            // Após 3 segundos, redireciona para o WhatsApp
+            setTimeout(function() {
+                window.location.href = "https://wa.me/9830420030?text=Já%20fiz%20meu%20pré%20cadastro,%20aguardo%20seu%20retorno!";
+            }, 3000); // Redireciona após 3 segundos
+        };
+    </script>
+</body>
+</html>
