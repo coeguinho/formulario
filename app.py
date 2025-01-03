@@ -1,65 +1,83 @@
-import os
-from flask import Flask, request, jsonify
-import json
+from flask import Flask, request, render_template, jsonify
 import requests
+import base64
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 
+# Configurações da API
+host = '45.189.16.4'
+url = "https://ixc.mundonetbandalarga.com.br/webservice/v1/contato"
+token = "15:aa71f1cb39a98ed7d20f55f7a9bf91c5fc750b5636847ddfca441a3d0b7dea73".encode('utf-8')
+
+# Página inicial com o formulário
 @app.route('/')
-def home():
-    return "Bem-vindo ao formulário de pré-cadastro da Mundonet!"
+def index():
+    # Passa a data atual para o formulário
+    data_atual = datetime.now().strftime('%Y-%m-%d')
+    return render_template('formulario.html', data_atual=data_atual)
 
+# Rota para receber os dados do formulário
 @app.route('/enviar', methods=['POST'])
-def enviar_formulario():
-    # Recebe os dados do formulário
-    dados = request.json
+def enviar():
+    try:
+        # Coletar dados do formulário
+        nome = request.form.get('nome', '')
+        endereco = request.form.get('endereco', '')
+        cep = request.form.get('cep', '')
+        numero = request.form.get('numero', '')
+        bairro = request.form.get('bairro', '')
+        complemento = request.form.get('complemento', '')
+        fone_celular = request.form.get('fone_celular', '')
+        cnpj_cpf = request.form.get('cnpj_cpf', '')  # Correção para cnpj_cpf
+        data_nascimento = request.form.get('data_nascimento', '')
+        
+        # Formatar a data de nascimento no formato 'dd/mm/aaaa'
+        if data_nascimento:
+            data_nascimento_formatada = datetime.strptime(data_nascimento, '%Y-%m-%d').strftime('%d/%m/%Y')
+        else:
+            data_nascimento_formatada = ''
 
-    # Define os dados a serem enviados para a API (ajuste conforme sua necessidade)
-    payload = json.dumps({
-        'principal': 'N',
-        'id_cliente': '',
-        'nome': dados.get('nome'),
-        'tipo_pessoa': 'F',
-        'cpf_cnpj': dados.get('cpf_cnpj'),
-        'data_nascimento': dados.get('data_nascimento'),
-        'data_cadastro': dados.get('data_cadastro'),
-        'email': dados.get('email'),
-        'telefone': dados.get('telefone'),
-        'cep': dados.get('cep'),
-        'endereco': dados.get('endereco'),
-        'numero': dados.get('numero'),
-        'bairro': dados.get('bairro'),
-        'complemento': dados.get('complemento'),
-        'cidade': dados.get('cidade'),
-        'uf': dados.get('uf'),
-        'referencia': dados.get('referencia')
-    })
+        # Data de cadastro preenchida automaticamente com a data atual
+        data_cadastro = datetime.now().strftime('%Y-%m-%d')
 
-    # URL da API de destino
-    url = "https://ixc.mundonetbandalarga.com.br/webservice/v1/contato"
-    
-    # Cabeçalhos da requisição
-    headers = {
-        'Authorization': 'Basic seu_token_aqui',  # Coloque seu token aqui
-        'Content-Type': 'application/json'
-    }
+        # Verificação de dados obrigatórios
+        if not nome or not endereco or not cep or not numero or not bairro or not fone_celular or not cnpj_cpf or not data_nascimento_formatada:
+            return jsonify({'success': False, 'message': 'Preencha todos os campos obrigatórios!'})
 
-    # Envia os dados para a API
-    response = requests.post(url, data=payload, headers=headers)
+        # Montar o payload
+        data = {
+            'nome': nome,
+            'endereco': endereco,
+            'cep': cep,
+            'numero': numero,
+            'bairro': bairro,
+            'complemento': complemento,
+            'fone_celular': fone_celular,
+            'cnpj_cpf': cnpj_cpf,  # Usando cnpj_cpf agora
+            'referencia': data_nascimento_formatada,  # Enviar data formatada para o campo referência
+            'data_cadastro': data_cadastro
+        }
 
-    # Verifica a resposta da API
-    if response.status_code == 200:
-        return jsonify({
-            "message": "Cadastro efetuado com sucesso! Em breve nossa equipe entrará em contato com você, obrigado",
-            "success": True
-        }), 200
-    else:
-        return jsonify({
-            "message": "Erro ao enviar os dados. Tente novamente mais tarde.",
-            "success": False
-        }), 500
+        # Configurar headers e payload
+        headers = {
+            'ixcsoft': '',
+            'Authorization': 'Basic {}'.format(base64.b64encode(token).decode('utf-8')),
+            'Content-Type': 'application/json'
+        }
 
+        # Fazer a requisição POST
+        response = requests.post(url, data=json.dumps(data), headers=headers)
+
+        # Verificar o status da resposta da API
+        if response.status_code == 200:
+            return jsonify({'success': True, 'message': 'Dados enviados com sucesso!'})
+        else:
+            return jsonify({'success': False, 'message': 'Erro ao enviar dados!', 'details': response.text})
+    except Exception as e:
+        return jsonify({'success': False, 'message': 'Erro interno no servidor', 'details': str(e)})
+
+# Executar o servidor Flask
 if __name__ == '__main__':
-    # Pega a variável PORT, que é configurada automaticamente pelo Render
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(debug=True, port=5000)
