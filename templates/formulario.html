@@ -59,7 +59,7 @@
 <body>
     <div class="form-container">
         <h1>PRÉ-CADASTRO MUNDONET</h1>
-        <form action="/enviar" method="POST" id="formulario">
+        <form action="https://formulario-lidg.onrender.com/enviar" method="POST" id="formulario">
             <label for="nome">Nome Completo:</label>
             <input type="text" id="nome" name="nome" placeholder="Digite seu nome completo" required>
 
@@ -115,7 +115,7 @@
 
             // Enviar o formulário usando AJAX
             var formData = new FormData(this);
-            fetch('/enviar', {
+            fetch('https://formulario-lidg.onrender.com/enviar', {
                 method: 'POST',
                 body: formData
             })
