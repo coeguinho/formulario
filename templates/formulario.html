@@ -42,10 +42,6 @@
             border-radius: 5px;
             font-size: 14px;
         }
-        .form-container input.filled {
-            background-color: #d4edda;
-            border-color: #28a745;
-        }
         .form-container button {
             background-color: #007bff;
             color: white;
@@ -58,25 +54,6 @@
         .form-container button:hover {
             background-color: #0056b3;
         }
-
-        /* Estilo para o pop-up de sucesso */
-        .popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #28a745;
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            text-align: center;
-            width: 80%;
-            max-width: 400px;
-        }
-
     </style>
 </head>
 <body>
@@ -117,57 +94,48 @@
         </form>
     </div>
 
-    <!-- Pop-up de sucesso -->
-    <div class="popup" id="popup">
-        Cadastro efetuado com sucesso! Em breve nossa equipe entrará em contato com você, obrigado.
-    </div>
-
     <script>
-        // Função para verificar e adicionar a classe 'filled' ao campo preenchido
-        function checkInputFilled() {
-            const inputs = document.querySelectorAll('input');
-            inputs.forEach(input => {
-                if (input.value !== '') {
-                    input.classList.add('filled');
-                } else {
-                    input.classList.remove('filled');
-                }
-            });
-        }
+        document.getElementById('formulario').addEventListener('submit', function(e) {
+            // Prevenir o envio do formulário
+            e.preventDefault();
+            
+            // Pegar a data de nascimento
+            var dataNascimento = document.getElementById('data_nascimento').value;
 
-        // Adiciona o evento para verificar quando o usuário preencher o campo
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', checkInputFilled);
-        });
-
-        document.getElementById('formulario').addEventListener('submit', function(event) {
-            // Transformar nome completo para caixa alta
-            var nomeInput = document.getElementById('nome');
-            nomeInput.value = nomeInput.value.toUpperCase(); // Nome completo em maiúsculas
-
-            // Verificar se a data de nascimento foi preenchida e formatar no formato dd/mm/aaaa
-            if (document.getElementById('data_nascimento').value) {
-                var dataNascimento = document.getElementById('data_nascimento').value;
+            // Se houver data preenchida, formatá-la para o formato 'dd/mm/aaaa'
+            if (dataNascimento) {
                 var data = new Date(dataNascimento);
-                var dia = ("0" + data.getDate()).slice(-2);
-                var mes = ("0" + (data.getMonth() + 1)).slice(-2);
+                var dia = ("0" + data.getDate()).slice(-2);  // Adicionar 0 se o dia for menor que 10
+                var mes = ("0" + (data.getMonth() + 1)).slice(-2);  // Adicionar 0 se o mês for menor que 10
                 var ano = data.getFullYear();
+
+                // Colocar a data formatada no campo referência
                 document.getElementById('referencia').value = dia + '/' + mes + '/' + ano;
             }
+
+            // Enviar o formulário usando AJAX
+            var formData = new FormData(this);
+            fetch('/enviar', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Verificar se a resposta indica sucesso
+                if (data.success) {
+                    // Exibir pop-up de sucesso
+                    alert("Dados enviados com sucesso, em breve nosso comercial entrará em contato.");
+                    // Opcionalmente, limpar o formulário
+                    document.getElementById('formulario').reset();
+                } else {
+                    alert("Erro ao enviar os dados. Tente novamente.");
+                }
+            })
+            .catch(error => {
+                console.error('Erro:', error);
+                alert("Ocorreu um erro inesperado. Tente novamente.");
+            });
         });
-
-        // Exibir pop-up após o envio do formulário
-        document.getElementById('formulario').onsubmit = function(event) {
-            event.preventDefault(); // Previne o envio do formulário
-
-            // Exibe o pop-up
-            document.getElementById('popup').style.display = 'block';
-
-            // Após 3 segundos, redireciona para o WhatsApp
-            setTimeout(function() {
-                window.location.href = "https://wa.me/55303000430?text=Já%20fiz%20meu%20pré%20cadastro,%20aguardo%20seu%20retorno!";
-            }, 3000); // Redireciona após 3 segundos
-        };
     </script>
 </body>
 </html>
